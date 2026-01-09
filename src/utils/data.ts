@@ -121,3 +121,5 @@ export const arrayCards = [
     id: '020'
   }
 ];
+
+export const NUM_OF_PROJECTS = arrayCards.length;

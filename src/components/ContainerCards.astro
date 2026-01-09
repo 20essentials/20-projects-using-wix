@@ -1,18 +1,130 @@
 ---
 import { arrayCards } from '@/utils/data';
+import { baseUrl } from '@/utils/functions';
 ---
 
 <section class='am-container-cards'>
-  {arrayCards.map(({ id, localImage, web, title }) => <aside class='card' />)}
+  {
+    arrayCards.map(({ localImage, web, title }, i) => (
+      <div
+        class={`phce card card-${i}`}
+        data-href={web}
+        style={{ '--bg-image': `url(${baseUrl(localImage)})` }}
+      >
+        <div class='content'>{title}</div>
+      </div>
+    ))
+  }
 </section>
 
 <style>
   .am-container-cards {
     min-height: 100vh;
-    display: grid;
     padding: 2.2vmax;
     gap: 2.2vmax;
     display: grid;
+    place-items: center;
+    place-content: center;
     grid-template-columns: repeat(auto-fit, minmax(17vmax, 1fr));
+
+    .phce {
+      perspective: 1000px;
+      position: relative;
+
+      &.card {
+        min-width: 16vmax;
+        aspect-ratio: 16 / 9;
+        text-decoration: none;
+      }
+
+      .content {
+        position: relative;
+        overflow: hidden;
+        transform-style: preserve-3d;
+        user-select: none;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        border-radius: 1rem;
+        padding: 1vmax;
+        font-size: 1.1vmax;
+        text-align: center;
+        min-height: 12vmax;
+        color: white;
+        --bg-overlay: rgb(0 0 0 / 0.5);
+
+        &::before,
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: -1;
+          transform-style: preserve-3d;
+        }
+
+        &::before {
+          background-image: var(--bg-image);
+          background-size: cover;
+          background-position: center;
+        }
+
+        &::after {
+          background: var(--bg-overlay, none);
+        }
+      }
+
+      &:hover {
+        > .content {
+          transform: rotateX(calc(22.5deg * var(--posY, 0)))
+            rotateY(calc(-22.5deg * var(--posX, 0)));
+
+          &::before {
+            transform: scale(1.33) translateX(calc(-12.5% * var(--posX, 0)))
+              translateY(calc(-12.5% * var(--posY, 0)));
+          }
+        }
+      }
+
+      &:not(:hover) {
+        > .content,
+        > .content::before {
+          transition: transform var(--transition-duration, 500ms)
+            var(--transition-timing-function, linear);
+        }
+      }
+    }
   }
 </style>
+
+<script>
+  document.addEventListener('pointermove', e => {
+    const card = (e.target as HTMLElement).closest<HTMLElement>('.phce');
+    if (!card) return;
+
+    const { width, height } = card.getBoundingClientRect();
+    card.style.setProperty('--posX', map(e.offsetX, [0, width]).toString());
+    card.style.setProperty('--posY', map(e.offsetY, [0, height]).toString());
+  });
+
+  document.addEventListener('click', e => {
+    const target = e.target as HTMLElement;
+    if (!target.matches('.phce, .phce *')) return;
+
+    const card = target.closest<HTMLElement>('.phce');
+    const href = card?.dataset.href;
+    if (href) window.location.href = href;
+  });
+
+  const map = (
+    value: number,
+    [inMin, inMax]: [number, number],
+    [outMin, outMax]: [number, number] = [-1, 1],
+    decimals = 2
+  ): number => {
+    const mapped =
+      ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+    const clamped = Math.min(Math.max(mapped, outMin), outMax);
+    const factor = 10 ** decimals;
+    return decimals > 0 ? Math.round(clamped * factor) / factor : clamped;
+  };
+</script>

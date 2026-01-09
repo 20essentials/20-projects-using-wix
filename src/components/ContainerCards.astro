@@ -23,6 +23,8 @@ import { baseUrl } from '@/utils/functions';
     padding: 2.2vmax;
     gap: 2.2vmax;
     display: grid;
+    position: relative;
+    z-index: 100;
     place-items: center;
     place-content: center;
     grid-template-columns: repeat(auto-fit, minmax(17vmax, 1fr));
@@ -35,6 +37,10 @@ import { baseUrl } from '@/utils/functions';
         min-width: 16vmax;
         aspect-ratio: 16 / 9;
         text-decoration: none;
+
+        * {
+          touch-action: auto;
+        }
       }
 
       .content {
@@ -97,34 +103,34 @@ import { baseUrl } from '@/utils/functions';
 </style>
 
 <script>
-  document.addEventListener('pointermove', e => {
-    const card = (e.target as HTMLElement).closest<HTMLElement>('.phce');
-    if (!card) return;
+ document.addEventListener('pointermove', e => {
+  const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('.phce')
+  if (!el) return
 
-    const { width, height } = card.getBoundingClientRect();
-    card.style.setProperty('--posX', map(e.offsetX, [0, width]).toString());
-    card.style.setProperty('--posY', map(e.offsetY, [0, height]).toString());
-  });
+  const rect = el.getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const y = e.clientY - rect.top
 
-  document.addEventListener('click', e => {
-    const target = e.target as HTMLElement;
-    if (!target.matches('.phce, .phce *')) return;
+  el.style.setProperty('--posX', map(x, [0, rect.width]).toString())
+  el.style.setProperty('--posY', map(y, [0, rect.height]).toString())
+})
 
-    const card = target.closest<HTMLElement>('.phce');
-    const href = card?.dataset.href;
-    if (href) window.location.href = href;
-  });
+document.addEventListener('click', e => {
+  const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('.phce')
+  const href = el?.dataset.href
+  if (href) window.location.href = href
+})
 
-  const map = (
-    value: number,
-    [inMin, inMax]: [number, number],
-    [outMin, outMax]: [number, number] = [-1, 1],
-    decimals = 2
-  ): number => {
-    const mapped =
-      ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
-    const clamped = Math.min(Math.max(mapped, outMin), outMax);
-    const factor = 10 ** decimals;
-    return decimals > 0 ? Math.round(clamped * factor) / factor : clamped;
-  };
+const map = (
+  value: number,
+  [inMin, inMax]: [number, number],
+  [outMin, outMax]: [number, number] = [-1, 1],
+  decimals = 2
+): number => {
+  const mapped =
+    ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin
+  const clamped = Math.min(Math.max(mapped, outMin), outMax)
+  const factor = 10 ** decimals
+  return decimals > 0 ? Math.round(clamped * factor) / factor : clamped
+}
 </script>

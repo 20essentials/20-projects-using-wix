@@ -8,9 +8,9 @@ export default defineConfig({
   },
 
   //Localhost
-  // site: 'http://localhost:4321/'
+  site: 'http://localhost:4321/'
 
   //Deploy normal project
-  base: '/some-projects-using-wix/',
-  site: 'https://20essentials.github.io/some-projects-using-wix/'
+  // base: '/some-projects-using-wix/',
+  // site: 'https://20essentials.github.io/some-projects-using-wix/'
 });
